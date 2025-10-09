@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/richard/mytopten/Player.java">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/richard/mytopten/Player.java" />
+              <option name="originalContent" value="package com.richard.mytopten;&#10;&#10;public class Player {&#10;    private final String name;&#10;    private int score;&#10;&#10;    public Player(String name, int score) {&#10;        this.name = name;&#10;        this.score = score;&#10;    }&#10;&#10;    public String getName() { return name; }&#10;    public int getScore() { return score; }&#10;    public void setScore(int score) { this.score = score; }&#10;}&#10;&#10;" />
+              <option name="updatedContent" value="package com.richard.mytopten;&#10;&#10;// Lớp Player dùng để lưu thông tin tên và điểm số của người chơi&#10;public class Player {&#10;    private final String name; // Tên người chơi&#10;    private int score;         // Điểm số&#10;&#10;    // Hàm khởi tạo&#10;    public Player(String name, int score) {&#10;        this.name = name;&#10;        this.score = score;&#10;    }&#10;&#10;    // Lấy tên người chơi&#10;    public String getName() { return name; }&#10;&#10;    // Lấy điểm số&#10;    public int getScore() { return score; }&#10;&#10;    // Cập nhật điểm số&#10;    public void setScore(int score) { this.score = score; }&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
