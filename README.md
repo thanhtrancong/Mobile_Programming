@@ -75,3 +75,76 @@ Solution:
 2. Now push the branch to remote:
    git push -u origin lab05_mytop3
 # Mobile_Programming
+
+# Simple High Scores Program (Top 3)
+
+## Requirements
+
+- Input player name and score.
+- Display top 3 players with highest scores, sorted descending.
+- If a new score is lower than all current top 3, do not add.
+- If a new score is higher than any in top 3, add it and remove the lowest.
+- Persist high scores so they remain after closing and reopening the app.
+
+## Implementation Steps (Android/Java)
+
+1. **UI Design**
+   - Create input fields for player name and score.
+   - Add a button to submit the score.
+   - Display a list of top 3 high scores.
+
+2. **Data Structure**
+   - Use a list or array to store up to 3 high score entries (name + score).
+
+3. **Logic**
+   - On submit, check if the new score is higher than any in the current top 3.
+   - If yes, insert the new score, sort the list descending, and keep only top 3.
+   - If no, ignore the new score.
+
+4. **Persistence**
+   - Use SharedPreferences (for Android) to save and load the high scores.
+
+5. **Sample Code Outline**
+
+```java
+// MainActivity.java
+// ...existing imports...
+
+public class MainActivity extends AppCompatActivity {
+    // ...existing code...
+    private List<ScoreEntry> highScores = new ArrayList<>();
+    // ...existing code...
+
+    // Load high scores from SharedPreferences
+    private void loadHighScores() {
+        // ...load logic...
+    }
+
+    // Save high scores to SharedPreferences
+    private void saveHighScores() {
+        // ...save logic...
+    }
+
+    // Add new score
+    private void addScore(String name, int score) {
+        // ...add logic: insert, sort, keep top 3...
+    }
+    // ...existing code...
+}
+```
+
+6. **ScoreEntry Class**
+```java
+// ScoreEntry.java
+public class ScoreEntry {
+    public String name;
+    public int score;
+    // ...constructor, getters, setters...
+}
+```
+
+7. **Persistence Example**
+   - Use JSON or comma-separated values to store the list in SharedPreferences.
+
+8. **Display**
+   - Update the UI list whenever high scores change.
