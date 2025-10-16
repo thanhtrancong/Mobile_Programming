@@ -1,0 +1,10 @@
+Họ tên: Nguyễn Văn A
+MSSV: 123456789
+Lớp: 28CNTT06
+Email:a.123456789@vanlanguni.vn
+Số điện thoại: 0123456789
+Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM
+Giới thiệu bản thân: Tôi là sinh viên năm nhất ngành Công nghệ Thông tin tại Đại học Văn Lang. Tôi đam mê lập trình và mong muốn phát triển kỹ năng của mình trong lĩnh vực này.
+Sở thích: Lập trình, đọc sách, chơi thể thao
+Mục tiêu nghề nghiệp: Trở thành một lập trình viên chuyên nghiệp và đóng góp vào các dự án công nghệ có ý nghĩa.
+// Kết thúc file thongtin.txt
