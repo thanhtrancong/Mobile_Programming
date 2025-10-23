@@ -1,54 +1,68 @@
 package com.richard.mysqlite_lab07;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 
-public class Sinhvien extends SQLiteOpenHelper {
+public class Sinhvien {
+    private int id;
+    private String ho;
+    private String ten;
+    private String lop;
 
-    private static final String DATABASE_NAME = "dbsvdemo";
-    private static final int DATABASE_VERSION = 1;
-    private static final String TABLE_NAME = "sinhvien";
+    public Sinhvien() { }
 
-    private static final String KEY_ID = "_id";
-    private static final String KEY_HO = "Hosv";
-    private static final String KEY_TEN = "Tensv";
-    private static final String KEY_LOP = "Lop";
-
-    public Sinhvien(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    // For inserts (no id)
+    public Sinhvien(String ho, String ten, String lop) {
+        this.ho = ho;
+        this.ten = ten;
+        this.lop = lop;
     }
+
+    // Full constructor
+    public Sinhvien(int id, String ho, String ten, String lop) {
+        this.id = id;
+        this.ho = ho;
+        this.ten = ten;
+        this.lop = lop;
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public String getHo() { return ho; }
+    public void setHo(String ho) { this.ho = ho; }
+
+    public String getTen() { return ten; }
+    public void setTen(String ten) { this.ten = ten; }
+
+    public String getLop() { return lop; }
+    public void setLop(String lop) { this.lop = lop; }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
-        String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "("
-                + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
-                + KEY_HO + " TEXT,"
-                + KEY_TEN + " TEXT,"
-                + KEY_LOP + " TEXT)";
-        db.execSQL(CREATE_TABLE);
+    public String toString() {
+        return id + ". " + ho + " " + ten + " - " + lop;
     }
 
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-        onCreate(db);
+    // Convert to ContentValues for DB operations (column names must match Quanlysinhvien)
+    public ContentValues toContentValues() {
+        ContentValues cv = new ContentValues();
+        cv.put(Quanlysinhvien.KEY_HO, ho);
+        cv.put(Quanlysinhvien.KEY_TEN, ten);
+        cv.put(Quanlysinhvien.KEY_LOP, lop);
+        return cv;
     }
 
-    public void createSv(String ho, String ten, String lop) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(KEY_HO, ho);
-        values.put(KEY_TEN, ten);
-        values.put(KEY_LOP, lop);
-        db.insert(TABLE_NAME, null, values);
-        db.close();
-    }
-
-    public Cursor getAllSv() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+    // Build a Sinhvien from a Cursor (assumes columns exist)
+    public static Sinhvien fromCursor(Cursor c) {
+        if (c == null) return null;
+        int idxId = c.getColumnIndex(Quanlysinhvien.KEY_ID);
+        int idxHo = c.getColumnIndex(Quanlysinhvien.KEY_HO);
+        int idxTen = c.getColumnIndex(Quanlysinhvien.KEY_TEN);
+        int idxLop = c.getColumnIndex(Quanlysinhvien.KEY_LOP);
+        int id = (idxId != -1) ? c.getInt(idxId) : 0;
+        String ho = (idxHo != -1) ? c.getString(idxHo) : "";
+        String ten = (idxTen != -1) ? c.getString(idxTen) : "";
+        String lop = (idxLop != -1) ? c.getString(idxLop) : "";
+        return new Sinhvien(id, ho, ten, lop);
     }
 }

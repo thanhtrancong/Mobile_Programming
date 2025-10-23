@@ -1,6 +1,5 @@
 package com.richard.mysqlite_lab07;
 
-import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -10,8 +9,11 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
-TextView stdlist;
+    TextView stdlist;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,22 +24,21 @@ TextView stdlist;
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        stdlist = findViewById(R.id.tvstudentlist);
-        Sinhvien db = new Sinhvien(this);
-        db.createSv("Nguyen", "An", "C21CNTT");
-        db.createSv("Le", "Binh", "C21CNTT");
 
-        Cursor cursor = db.getAllSv();
+        stdlist = findViewById(R.id.tvstudentlist);
+
+        // Use the new manager class
+        Quanlysinhvien db = new Quanlysinhvien(this);
+        // Insert sample students
+        db.addSinhvien(new Sinhvien("Nguyen", "An", "C21CNTT"));
+        db.addSinhvien(new Sinhvien("Le", "Binh", "C21CNTT"));
+
+        // Fetch and display
+        List<Sinhvien> students = db.getAllSv();
         StringBuilder sb = new StringBuilder();
-        if (cursor.moveToFirst()) {
-            do {
-                sb.append(cursor.getInt(0)).append(". ")
-                        .append(cursor.getString(1)).append(" ")
-                        .append(cursor.getString(2)).append(" - ")
-                        .append(cursor.getString(3)).append("\n");
-            } while (cursor.moveToNext());
+        for (Sinhvien s : students) {
+            sb.append(s.toString()).append("\n");
         }
-        cursor.close();
         stdlist.setText(sb.toString());
     }
 }
