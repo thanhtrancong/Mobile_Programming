@@ -65,5 +65,76 @@ public class Quanlysinhvien extends SQLiteOpenHelper {
         db.close();
         return list;
     }
+
+    /**
+     * Update an existing student in the database
+     * @param sv The student object with updated information
+     * @return The number of rows affected (1 if successful, 0 if not found)
+     */
+    public int updateSinhvien(Sinhvien sv) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = sv.toContentValues();
+
+        // Update the student where _id matches
+        int rowsAffected = db.update(TABLE_NAME, values,
+                                     KEY_ID + " = ?",
+                                     new String[]{String.valueOf(sv.getId())});
+        db.close();
+        return rowsAffected;
+    }
+
+    /**
+     * Delete a student from the database by ID
+     * @param id The ID of the student to delete
+     * @return The number of rows deleted (1 if successful, 0 if not found)
+     */
+    public int deleteSinhvien(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Delete the student where _id matches
+        int rowsDeleted = db.delete(TABLE_NAME,
+                                    KEY_ID + " = ?",
+                                    new String[]{String.valueOf(id)});
+        db.close();
+        return rowsDeleted;
+    }
+
+    /**
+     * Get a single student by ID
+     * @param id The ID of the student to retrieve
+     * @return The Sinhvien object if found, null otherwise
+     */
+    public Sinhvien getSinhvienById(int id) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_NAME,
+                                null,
+                                KEY_ID + " = ?",
+                                new String[]{String.valueOf(id)},
+                                null, null, null);
+
+        Sinhvien sv = null;
+        if (cursor != null && cursor.moveToFirst()) {
+            sv = Sinhvien.fromCursor(cursor);
+            cursor.close();
+        }
+        db.close();
+        return sv;
+    }
+
+    /**
+     * Get the total count of students in the database
+     * @return The number of students
+     */
+    public int getStudentCount() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_NAME, null);
+        int count = 0;
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return count;
+    }
 }
 

@@ -20,17 +20,99 @@
         app:layout_constraintTop_toTopOf="parent" />
     -->
 
-    <!-- New ListView to display student list in a scrollable format -->
-    <ListView
-        android:id="@+id/lvStudentList"
+    <!-- ScrollView to contain all content and make it scrollable -->
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:padding="16dp"
-        android:divider="@android:color/darker_gray"
-        android:dividerHeight="1dp"
+        android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- LinearLayout to organize buttons and ListView vertically -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Title TextView for the Student Management System -->
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Student Management System"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:paddingBottom="16dp"
+                android:textColor="@android:color/holo_blue_dark" />
+
+            <!-- Container for action buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:paddingBottom="16dp">
+
+                <!-- Button to add a new student -->
+                <Button
+                    android:id="@+id/btnAddStudent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Add Student"
+                    android:layout_marginEnd="8dp"
+                    android:textSize="14sp" />
+
+                <!-- Button to refresh the student list -->
+                <Button
+                    android:id="@+id/btnRefresh"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Refresh List"
+                    android:layout_marginEnd="8dp"
+                    android:textSize="14sp" />
+
+                <!-- Button to delete all students -->
+                <Button
+                    android:id="@+id/btnDeleteAll"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Delete All"
+                    android:textSize="14sp"
+                    android:backgroundTint="@android:color/holo_red_dark" />
+
+            </LinearLayout>
+
+            <!-- Info TextView to display instructions and selected item -->
+            <TextView
+                android:id="@+id/tvInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tap to select • Long press to delete • Double tap to edit"
+                android:textSize="12sp"
+                android:textStyle="italic"
+                android:gravity="center"
+                android:paddingBottom="8dp"
+                android:textColor="@android:color/darker_gray" />
+
+            <!-- ListView to display the list of students -->
+            <ListView
+                android:id="@+id/lvStudentList"
+                android:layout_width="match_parent"
+                android:layout_height="400dp"
+                android:divider="@android:color/darker_gray"
+                android:dividerHeight="1dp"
+                android:choiceMode="singleChoice"
+                android:background="@android:color/white" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
