@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/README_PUSH.md">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/README_PUSH.md" />
+              <option name="updatedContent" value="&#10;Suggested commit messages (pick one that best fits the change)&#10;&#10;- chore: initial project import&#10;- feat: add Sinhvien model and Quanlysinhvien DB helper&#10;- refactor: move DB logic into Quanlysinhvien (OOP)&#10;- fix: correct cursor handling / close DB resources&#10;- docs: update README and push instructions&#10;- style: code formatting and linting&#10;- test: add unit tests for database operations&#10;- perf: optimize getAllSv query&#10;- ci: add CI workflow / GitHub Actions&#10;&#10;Usage examples:&#10;- ./push_to_github.sh git@github.com:yourusername/your-repo.git main &quot;feat: add Sinhvien and Quanlysinhvien&quot;&#10;- Or: git commit -m &quot;refactor: move DB logic into Quanlysinhvien (OOP)&quot;&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
