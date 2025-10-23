@@ -154,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
         // Set the adapter to the ListView to display the data
         lvStudentList.setAdapter(adapter);
 
-        // Update info text with student count
-        tvInfo.setText("Total Students: " + students.size() + " | Tap to select • Long press to delete • Double tap to edit");
+        // Update info text with student count in Vietnamese
+        tvInfo.setText("Tổng số: " + students.size() + " sinh viên | Nhấn để chọn • Giữ lâu để xóa • Nhấn đúp để sửa");
     }
 
     /**
@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 loadStudentData();
-                Toast.makeText(MainActivity.this, "List refreshed!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Đã làm mới danh sách! / List refreshed!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -237,10 +237,10 @@ public class MainActivity extends AppCompatActivity {
     private void onSingleClick(int position) {
         if (position < studentObjectList.size()) {
             Sinhvien student = studentObjectList.get(position);
-            String info = "Selected: " + student.getHo() + " " + student.getTen() +
-                         " (ID: " + student.getId() + ", Class: " + student.getLop() + ")";
+            String info = "Đã chọn: " + student.getHo() + " " + student.getTen() +
+                         " (ID: " + student.getId() + ", Lớp: " + student.getLop() + ")";
             tvInfo.setText(info);
-            Toast.makeText(this, "Student selected. Double tap to edit.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Đã chọn sinh viên. Nhấn đúp để sửa.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -260,36 +260,49 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showAddStudentDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add New Student");
+        builder.setTitle("Thêm Sinh Viên Mới / Add New Student");
 
-        // Create input fields
+        // Create input fields with Vietnamese language support
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 40, 50, 10);
 
+        // EditText for Last Name with Vietnamese input support
         final EditText etHo = new EditText(this);
-        etHo.setHint("Last Name (Ho)");
+        etHo.setHint("Họ (Last Name)");
+        etHo.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
+                         android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        // Enable Vietnamese IME (Input Method Editor)
+        etHo.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etHo);
 
+        // EditText for First Name with Vietnamese input support
         final EditText etTen = new EditText(this);
-        etTen.setHint("First Name (Ten)");
+        etTen.setHint("Tên (First Name)");
+        etTen.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
+                          android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        etTen.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etTen);
 
+        // EditText for Class with Vietnamese input support
         final EditText etLop = new EditText(this);
-        etLop.setHint("Class (Lop)");
+        etLop.setHint("Lớp (Class)");
+        etLop.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
+                          android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        etLop.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etLop);
 
         builder.setView(layout);
 
-        // Add button
-        builder.setPositiveButton("Add", (dialog, which) -> {
+        // Add button with Vietnamese text
+        builder.setPositiveButton("Thêm / Add", (dialog, which) -> {
             String ho = etHo.getText().toString().trim();
             String ten = etTen.getText().toString().trim();
             String lop = etLop.getText().toString().trim();
 
             // Validate input
             if (ho.isEmpty() || ten.isEmpty() || lop.isEmpty()) {
-                Toast.makeText(this, "All fields are required!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Vui lòng điền đầy đủ thông tin! / All fields are required!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -300,11 +313,11 @@ public class MainActivity extends AppCompatActivity {
             // Reload the list
             loadStudentData();
 
-            Toast.makeText(this, "Student added successfully!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Đã thêm sinh viên thành công! / Student added successfully!", Toast.LENGTH_SHORT).show();
         });
 
-        // Cancel button
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        // Cancel button with Vietnamese text
+        builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
 
         builder.show();
     }
@@ -316,39 +329,52 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showEditStudentDialog(Sinhvien student, int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Edit Student");
+        builder.setTitle("Sửa Thông Tin Sinh Viên / Edit Student");
 
-        // Create input fields with current values
+        // Create input fields with current values and Vietnamese input support
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 40, 50, 10);
 
+        // EditText for Last Name with Vietnamese input support
         final EditText etHo = new EditText(this);
-        etHo.setHint("Last Name (Ho)");
+        etHo.setHint("Họ (Last Name)");
         etHo.setText(student.getHo());
+        etHo.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
+                         android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        // Enable Vietnamese IME (Input Method Editor)
+        etHo.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etHo);
 
+        // EditText for First Name with Vietnamese input support
         final EditText etTen = new EditText(this);
-        etTen.setHint("First Name (Ten)");
+        etTen.setHint("Tên (First Name)");
         etTen.setText(student.getTen());
+        etTen.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
+                          android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        etTen.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etTen);
 
+        // EditText for Class with Vietnamese input support
         final EditText etLop = new EditText(this);
-        etLop.setHint("Class (Lop)");
+        etLop.setHint("Lớp (Class)");
         etLop.setText(student.getLop());
+        etLop.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
+                          android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+        etLop.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etLop);
 
         builder.setView(layout);
 
-        // Update button
-        builder.setPositiveButton("Update", (dialog, which) -> {
+        // Update button with Vietnamese text
+        builder.setPositiveButton("Cập Nhật / Update", (dialog, which) -> {
             String ho = etHo.getText().toString().trim();
             String ten = etTen.getText().toString().trim();
             String lop = etLop.getText().toString().trim();
 
             // Validate input
             if (ho.isEmpty() || ten.isEmpty() || lop.isEmpty()) {
-                Toast.makeText(this, "All fields are required!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Vui lòng điền đầy đủ thông tin! / All fields are required!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -363,11 +389,11 @@ public class MainActivity extends AppCompatActivity {
             // Reload the list
             loadStudentData();
 
-            Toast.makeText(this, "Student updated successfully!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Đã cập nhật thành công! / Student updated successfully!", Toast.LENGTH_SHORT).show();
         });
 
-        // Cancel button
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        // Cancel button with Vietnamese text
+        builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
 
         builder.show();
     }
@@ -381,21 +407,21 @@ public class MainActivity extends AppCompatActivity {
             Sinhvien student = studentObjectList.get(position);
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Delete Student");
-            builder.setMessage("Are you sure you want to delete " +
-                             student.getHo() + " " + student.getTen() + "?");
+            builder.setTitle("Xóa Sinh Viên / Delete Student");
+            builder.setMessage("Bạn có chắc muốn xóa sinh viên " +
+                             student.getHo() + " " + student.getTen() + " không?\n\nAre you sure you want to delete this student?");
 
-            builder.setPositiveButton("Delete", (dialog, which) -> {
+            builder.setPositiveButton("Xóa / Delete", (dialog, which) -> {
                 // Delete from database
                 db.deleteSinhvien(student.getId());
 
                 // Reload the list
                 loadStudentData();
 
-                Toast.makeText(this, "Student deleted!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Đã xóa sinh viên! / Student deleted!", Toast.LENGTH_SHORT).show();
             });
 
-            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
 
             builder.show();
         }
@@ -406,10 +432,10 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showDeleteAllConfirmationDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Delete All Students");
-        builder.setMessage("Are you sure you want to delete ALL students? This action cannot be undone!");
+        builder.setTitle("Xóa Tất Cả Sinh Viên / Delete All Students");
+        builder.setMessage("Bạn có chắc muốn xóa TẤT CẢ sinh viên không? Hành động này không thể hoàn tác!\n\nAre you sure you want to delete ALL students? This action cannot be undone!");
 
-        builder.setPositiveButton("Delete All", (dialog, which) -> {
+        builder.setPositiveButton("Xóa Tất Cả / Delete All", (dialog, which) -> {
             // Delete all students from database
             for (Sinhvien student : studentObjectList) {
                 db.deleteSinhvien(student.getId());
@@ -418,10 +444,10 @@ public class MainActivity extends AppCompatActivity {
             // Reload the list
             loadStudentData();
 
-            Toast.makeText(this, "All students deleted!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Đã xóa tất cả sinh viên! / All students deleted!", Toast.LENGTH_SHORT).show();
         });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
 
         builder.show();
     }

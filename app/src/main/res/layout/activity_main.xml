@@ -42,7 +42,7 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Student Management System"
+                android:text="Quản Lý Sinh Viên"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:gravity="center"
@@ -63,7 +63,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Add Student"
+                    android:text="Thêm SV"
                     android:layout_marginEnd="8dp"
                     android:textSize="14sp" />
 
@@ -73,7 +73,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Refresh List"
+                    android:text="Làm Mới"
                     android:layout_marginEnd="8dp"
                     android:textSize="14sp" />
 
@@ -83,7 +83,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Delete All"
+                    android:text="Xóa Tất Cả"
                     android:textSize="14sp"
                     android:backgroundTint="@android:color/holo_red_dark" />
 
@@ -94,7 +94,7 @@
                 android:id="@+id/tvInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tap to select • Long press to delete • Double tap to edit"
+                android:text="Nhấn để chọn • Giữ lâu để xóa • Nhấn đúp để sửa"
                 android:textSize="12sp"
                 android:textStyle="italic"
                 android:gravity="center"
