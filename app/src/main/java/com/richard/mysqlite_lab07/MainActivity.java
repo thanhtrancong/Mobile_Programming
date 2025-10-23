@@ -1,6 +1,8 @@
 package com.richard.mysqlite_lab07;
 
+import android.database.Cursor;
 import android.os.Bundle;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,7 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
-
+TextView stdlist;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,5 +22,22 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        stdlist = findViewById(R.id.tvstudentlist);
+        Sinhvien db = new Sinhvien(this);
+        db.createSv("Nguyen", "An", "C21CNTT");
+        db.createSv("Le", "Binh", "C21CNTT");
+
+        Cursor cursor = db.getAllSv();
+        StringBuilder sb = new StringBuilder();
+        if (cursor.moveToFirst()) {
+            do {
+                sb.append(cursor.getInt(0)).append(". ")
+                        .append(cursor.getString(1)).append(" ")
+                        .append(cursor.getString(2)).append(" - ")
+                        .append(cursor.getString(3)).append("\n");
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        stdlist.setText(sb.toString());
     }
 }
