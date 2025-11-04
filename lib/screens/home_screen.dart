@@ -38,7 +38,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Mở màn hình thêm giao dịch (Sinh viên tự triển khai màn hình này)
   void _openAddTransactionScreen() async {
-    final result = await Navigator.push(context, MaterialPageRoute(builder: (c) => AddTransactionScreen()));
+    final width = MediaQuery.of(context).size.width;
+    bool? result;
+    if (width >= 700) {
+      // Show as animated dialog on wide screens
+      result = await showGeneralDialog<bool>(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: 'AddTransaction',
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (ctx, anim1, anim2) {
+          return Center(
+            child: Material(
+              color: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 700),
+                child: SizedBox(height: 600, child: AddTransactionScreen()),
+              ),
+            ),
+          );
+        },
+        transitionBuilder: (ctx, anim1, anim2, child) {
+          final curved = Curves.easeOut.transform(anim1.value);
+          return Transform.scale(scale: curved, child: Opacity(opacity: anim1.value, child: child));
+        },
+      );
+    } else {
+      result = await Navigator.push(context, MaterialPageRoute(builder: (c) => AddTransactionScreen()));
+    }
     if (result == true) _refreshData();
   }
 
@@ -208,20 +235,32 @@ class _HomeScreenState extends State<HomeScreen> {
             final currencyFormat = NumberFormat.currency(
                 locale: 'vi_VN', symbol: '\u20ab');
 
-            return ListTile(
-              leading: Icon(isExpense ?
-              Icons.arrow_downward : Icons.arrow_upward, color: color),
-              title: Text(categoryName,
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(note.isEmpty ?
-              DateFormat('dd/MM/yyyy').format(date) : '$note - '
-                  '${DateFormat('dd/MM/yyyy').format(date)}'),
-              trailing: Text(
-                '$sign${currencyFormat.format(amount)}',
-                style: TextStyle(color: color, fontWeight: FontWeight.bold),
-              ),
-              // Xóa giao dịch khi nhấn giữ
-              onLongPress: () async {
+            return Dismissible(
+              key: ValueKey(transactionMap[columnTransactionId]?.toString() ?? 'txn_$index'),
+              background: Container(color: Colors.red, child: const Icon(Icons.delete, color: Colors.white)),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (direction) async {
+                // Hiển thị hộp thoại xác nhận trước khi xóa
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Xác nhận xóa'),
+                    content: const Text('Bạn có chắc chắn muốn xóa giao dịch này không?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Hủy'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+                return confirm == true;
+              },
+              onDismissed: (direction) async {
                 final idRaw = transactionMap[columnTransactionId];
                 final int? id = (idRaw is int) ? idRaw : ((idRaw is num) ? idRaw.toInt() : null);
                 if (id != null) {
@@ -237,6 +276,45 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 }
               },
+              child: ListTile(
+                leading: Icon(isExpense ?
+                Icons.arrow_downward : Icons.arrow_upward, color: color),
+                title: Text(categoryName,
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(note.isEmpty ?
+                DateFormat('dd/MM/yyyy').format(date) : '$note - '
+                    '${DateFormat('dd/MM/yyyy').format(date)}'),
+                trailing: Text(
+                  '$sign${currencyFormat.format(amount)}',
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                ),
+                onTap: () async {
+                  // Open edit screen with Transaction constructed from map
+                  final txnMap = Map<String, dynamic>.from(transactionMap);
+                  // Use Transaction.fromMap from models
+                  try {
+                    final existing = Transaction.fromMap(txnMap);
+                    final width = MediaQuery.of(context).size.width;
+                    bool? editResult;
+                    if (width >= 700) {
+                      editResult = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => Dialog(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 700),
+                            child: SizedBox(height: 600, child: AddTransactionScreen(transaction: existing)),
+                          ),
+                        ),
+                      );
+                    } else {
+                      editResult = await Navigator.push(context, MaterialPageRoute(builder: (c) => AddTransactionScreen(transaction: existing)));
+                    }
+                    if (editResult == true) _refreshData();
+                  } catch (e) {
+                    // ignore parse errors
+                  }
+                },
+              ),
             );
           },
         );

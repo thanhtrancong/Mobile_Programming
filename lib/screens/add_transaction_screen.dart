@@ -1,15 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 import '../models/category.dart';
 import '../models/transaction.dart' as txn;
 
+typedef CategoriesLoader = Future<List<Category>> Function();
+typedef TransactionSaver = Future<int> Function(txn.Transaction transaction);
+
 class AddTransactionScreen extends StatefulWidget {
   final txn.Transaction? transaction; // nếu không null -> edit mode
-  const AddTransactionScreen({super.key, this.transaction});
+  final CategoriesLoader? categoriesLoader;
+  final TransactionSaver? onInsert;
+  final TransactionSaver? onUpdate;
+
+  const AddTransactionScreen({super.key, this.transaction, this.categoriesLoader, this.onInsert, this.onUpdate});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+}
+
+// Custom input formatter: allow digits and one decimal separator (dot or comma), up to 2 decimals
+class AmountInputFormatter extends TextInputFormatter {
+  final _normalized = RegExp(r'[^0-9\.,]');
+  final _valid = RegExp(r'^\d*(?:[\.,]\d{0,2})?$');
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    String text = newValue.text;
+    // Remove any characters except digits and separators
+    text = text.replaceAll(_normalized, '');
+    if (text.isEmpty) return newValue.copyWith(text: '');
+
+    // Normalize multiple separators to single
+    int dotCount = '.'.allMatches(text).length;
+    int commaCount = ','.allMatches(text).length;
+    if (dotCount + commaCount > 1) {
+      return oldValue;
+    }
+
+    // Validate pattern (allow either comma or dot)
+    if (!_valid.hasMatch(text)) {
+      return oldValue;
+    }
+
+    return newValue.copyWith(text: text, selection: updateCursor(text, newValue.selection));
+  }
+
+  TextSelection updateCursor(String text, TextSelection selection) {
+    final int offset = selection.baseOffset.clamp(0, text.length);
+    return TextSelection.collapsed(offset: offset);
+  }
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
@@ -32,6 +73,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (widget.transaction != null) {
       final t = widget.transaction!;
+      // format amount for display (use dot as decimal separator)
       _amountController.text = t.amount.toString();
       _noteController.text = t.note;
       _selectedDate = t.date;
@@ -41,7 +83,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _loadCategories() async {
-    final cats = await dbHelper.getCategories();
+    final cats = widget.categoriesLoader != null ? await widget.categoriesLoader!() : await dbHelper.getCategories();
     if (!mounted) return;
     setState(() {
       _categories = cats;
@@ -94,9 +136,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
 
     if (widget.transaction == null) {
-      await dbHelper.insertTransaction(transaction);
+      if (widget.onInsert != null) {
+        await widget.onInsert!(transaction);
+      } else {
+        await dbHelper.insertTransaction(transaction);
+      }
     } else {
-      await dbHelper.updateTransaction(transaction);
+      if (widget.onUpdate != null) {
+        await widget.onUpdate!(transaction);
+      } else {
+        await dbHelper.updateTransaction(transaction);
+      }
     }
 
     if (!mounted) return; // ensure context still valid
@@ -112,6 +162,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           controller: _amountController,
           keyboardType: TextInputType.numberWithOptions(decimal: true),
           decoration: const InputDecoration(labelText: 'Số tiền', prefixText: ''),
+          inputFormatters: [AmountInputFormatter()],
           validator: (v) => (v == null || v.trim().isEmpty) ? 'Nhập số tiền' : null,
         ),
         const SizedBox(height: 12),
@@ -134,16 +185,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        Wrap(
+          spacing: 8,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             const Text('Loại:'),
-            const SizedBox(width: 8),
             ChoiceChip(
               label: const Text('Chi tiêu'),
               selected: _selectedType == 0,
               onSelected: (_) => setState(() => _selectedType = 0),
             ),
-            const SizedBox(width: 8),
             ChoiceChip(
               label: const Text('Thu nhập'),
               selected: _selectedType == 1,
@@ -154,7 +205,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         const SizedBox(height: 12),
         Row(
           children: [
-            Text('Ngày: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}'),
+            Flexible(child: Text('Ngày: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}')),
             const SizedBox(width: 16),
             ElevatedButton(onPressed: _pickDate, child: const Text('Chọn ngày')),
           ],
