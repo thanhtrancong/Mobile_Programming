@@ -23,9 +23,10 @@ class Category {
     };
   }
 
-  // Chuyển đổi từ Map lấy từ Database thành đối tượng Category
+  // Chuyển đổi từ Map lấy từ Database thành đối tượng Category (cast an toàn)
   Category.fromMap(Map<String, dynamic> map)
-      : id = map[columnCategoryId],
-        name = map[columnCategoryName],
-        type = map[columnCategoryType];
+      : id = map[columnCategoryId] is int ? map[columnCategoryId] as int : (map[columnCategoryId] is num ? (map[columnCategoryId] as num).toInt() : null),
+        name = (map[columnCategoryName] as String?) ?? '',
+        type = (map[columnCategoryType] is int) ? (map[columnCategoryType] as int) : ((map[columnCategoryType] is num) ? (map[columnCategoryType] as num).toInt() : 0);
+
 }

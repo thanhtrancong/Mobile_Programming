@@ -39,12 +39,13 @@ class Transaction {
     };
   }
 
-  // Chuyển đổi từ Map lấy từ Database thành đối tượng Transaction
+  // Chuyển đổi từ Map (lấy từ DB) thành đối tượng Transaction với casting an toàn
   Transaction.fromMap(Map<String, dynamic> map)
-      : id = map[columnTransactionId],
-        amount = map[columnAmount],
-        categoryId = map[columnCategoryIdFk],
-        type = map[columnType],
-        date = DateTime.parse(map[columnDate]), // Phân tích chuỗi thành DateTime
-        note = map[columnNote];
+      : id = map[columnTransactionId] is int ? map[columnTransactionId] as int : (map[columnTransactionId] is num ? (map[columnTransactionId] as num).toInt() : null),
+        amount = (map[columnAmount] is num) ? (map[columnAmount] as num).toDouble() : double.tryParse(map[columnAmount]?.toString() ?? '') ?? 0.0,
+        categoryId = (map[columnCategoryIdFk] is int) ? (map[columnCategoryIdFk] as int) : ((map[columnCategoryIdFk] is num) ? (map[columnCategoryIdFk] as num).toInt() : 0),
+        type = (map[columnType] is int) ? (map[columnType] as int) : ((map[columnType] is num) ? (map[columnType] as num).toInt() : 0),
+        date = map[columnDate] is String ? DateTime.parse(map[columnDate] as String) : DateTime.now(), // fallback to now if parsing fails
+        note = (map[columnNote] as String?) ?? '';
+
 }

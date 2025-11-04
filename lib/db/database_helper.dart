@@ -33,16 +33,16 @@ class DatabaseHelper {
   }
 
   // Bật chế độ khóa ngoại (FOREIGN KEY)
-  Future _onConfigure(Database db) async {
+  Future<void> _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
   // Tạo bảng khi Database được khởi tạo lần đầu
-  void _onCreate(Database db, int version) async {
+  Future<void> _onCreate(Database db, int version) async {
     // 1. Tạo bảng CATEGORY
     await db.execute('''
       CREATE TABLE $tableCategory (
-        $columnCategoryId INTEGER PRIMARY KEY,
+        $columnCategoryId INTEGER PRIMARY KEY AUTOINCREMENT,
         $columnCategoryName TEXT NOT NULL,
         $columnCategoryType INTEGER NOT NULL
       )
@@ -51,7 +51,7 @@ class DatabaseHelper {
     // 2. Tạo bảng TRANSACTION với Khóa ngoại (FOREIGN KEY)
     await db.execute('''
       CREATE TABLE $tableTransaction (
-        $columnTransactionId INTEGER PRIMARY KEY,
+        $columnTransactionId INTEGER PRIMARY KEY AUTOINCREMENT,
         $columnAmount REAL NOT NULL,
         $columnCategoryIdFk INTEGER NOT NULL,
         $columnType INTEGER NOT NULL,
@@ -71,23 +71,41 @@ class DatabaseHelper {
     await db.insert(tableCategory, Category(name: 'Tiền thưởng', type: 1).toMap());
   }
 
+  // Đóng database (nên gọi khi app thoát hoặc khi không cần nữa)
+  Future<void> close() async {
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+    }
+  }
+
   // =================================================================
   // --- CHỨC NĂNG CHO BẢNG CATEGORY ---
   // =================================================================
 
   // CREATE Category
   Future<int> insertCategory(Category category) async {
-    Database db = await database;
-    return await db.insert(tableCategory, category.toMap());
+    try {
+      Database db = await database;
+      return await db.insert(tableCategory, category.toMap());
+    } catch (e) {
+      // print('insertCategory error: $e');
+      return -1;
+    }
   }
 
   // READ Categories
   Future<List<Category>> getCategories() async {
-    Database db = await database;
-    List<Map<String, dynamic>> maps = await db.query(tableCategory);
-    return List.generate(maps.length, (i) {
-      return Category.fromMap(maps[i]);
-    });
+    try {
+      Database db = await database;
+      List<Map<String, dynamic>> maps = await db.query(tableCategory);
+      return List.generate(maps.length, (i) {
+        return Category.fromMap(maps[i]);
+      });
+    } catch (e) {
+      // print('getCategories error: $e');
+      return <Category>[];
+    }
   }
 
   // =================================================================
@@ -96,41 +114,55 @@ class DatabaseHelper {
 
   // CREATE Transaction
   Future<int> insertTransaction(Transaction transaction) async {
-    Database db = await database;
-    return await db.insert(tableTransaction, transaction.toMap());
+    try {
+      Database db = await database;
+      return await db.insert(tableTransaction, transaction.toMap());
+    } catch (e) {
+      // print('insertTransaction error: $e');
+      return -1;
+    }
   }
 
   // READ Transactions (Lấy giao dịch kèm tên danh mục)
   Future<List<Map<String, dynamic>>> getTransactionsWithCategory() async {
-    Database db = await database;
-    // Sử dụng JOIN để lấy tên Danh mục (c.name) cùng với dữ liệu giao dịch (t.*)
-    return await db.rawQuery('''
+    try {
+      Database db = await database;
+      return await db.rawQuery('''
       SELECT t.*, c.name as categoryName 
       FROM $tableTransaction t
       INNER JOIN $tableCategory c ON t.$columnCategoryIdFk = c.$columnCategoryId
       ORDER BY t.$columnDate DESC
     ''');
+    } catch (e) {
+      // print('getTransactionsWithCategory error: $e');
+      return <Map<String, dynamic>>[];
+    }
   }
 
   // DELETE Transaction
   Future<int> deleteTransaction(int id) async {
-    Database db = await database;
-    return await db.delete(
+    try {
+      Database db = await database;
+      return await db.delete(
         tableTransaction,
         where: '$columnTransactionId = ?',
-        whereArgs: [id]
-    );
+        whereArgs: [id],
+      );
+    } catch (e) {
+      // print('deleteTransaction error: $e');
+      return -1;
+    }
   }
 
   // REPORT: Tính tổng thu/chi trong tháng hiện tại
   Future<double> calculateTotal(int type) async {
-    Database db = await database;
-    var now = DateTime.now();
-    // Tạo chuỗi ngày đầu và ngày cuối tháng để query theo
-    var startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
-    var endOfMonth = DateTime(now.year, now.month + 1, 0).toIso8601String();
+    try {
+      Database db = await database;
+      var now = DateTime.now();
+      var startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
+      var endOfMonth = DateTime(now.year, now.month + 1, 0).toIso8601String();
 
-    List<Map> result = await db.rawQuery('''
+      List<Map<String, Object?>> result = await db.rawQuery('''
       SELECT SUM($columnAmount) as total 
       FROM $tableTransaction 
       WHERE $columnType = ? 
@@ -138,8 +170,12 @@ class DatabaseHelper {
       AND $columnDate <= ?
     ''', [type, startOfMonth, endOfMonth]);
 
-    // Lấy giá trị tổng (có thể là null nếu không có giao dịch)
-    double total = result.first['total'] ?? 0.0;
-    return total;
+      final value = result.first['total'];
+      final double total = (value is num) ? value.toDouble() : 0.0;
+      return total;
+    } catch (e) {
+      // print('calculateTotal error: $e');
+      return 0.0;
+    }
   }
 }

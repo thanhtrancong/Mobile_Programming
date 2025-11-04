@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final balance = income - expense; // Số dư
 
             final currencyFormat = NumberFormat.currency(
-                locale: 'vi_VN', symbol: '₫');
+                locale: 'vi_VN', symbol: '\u20ab');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,7 +133,10 @@ class _HomeScreenState extends State<HomeScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('Không có giao dịch nào được ghi lại.'));
+          return const Center(child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('Không có giao dịch nào được ghi lại.'),
+          ));
         }
 
         return ListView.builder(
@@ -143,23 +146,24 @@ class _HomeScreenState extends State<HomeScreen> {
           itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
             final transactionMap = snapshot.data![index];
-            final amount = transactionMap[columnAmount];
-            final categoryName = transactionMap['categoryName'];
-            // Tên danh mục lấy từ JOIN
-            final type = transactionMap[columnType];
-            final note = transactionMap[columnNote];
-            final date = DateTime.parse(transactionMap[columnDate]);
+            // Sử dụng casting an toàn cho các trường có thể null/kiểu khác
+            final dynamic amountRaw = transactionMap[columnAmount];
+            final double amount = (amountRaw is num) ? amountRaw.toDouble() : double.tryParse(amountRaw?.toString() ?? '') ?? 0.0;
+            final String categoryName = (transactionMap['categoryName'] as String?) ?? 'Không rõ';
+            final int type = (transactionMap[columnType] is int) ? (transactionMap[columnType] as int) : ((transactionMap[columnType] is num) ? (transactionMap[columnType] as num).toInt() : 0);
+            final String note = (transactionMap[columnNote] as String?) ?? '';
+            final DateTime date = transactionMap[columnDate] is String ? DateTime.parse(transactionMap[columnDate] as String) : DateTime.now();
 
             final isExpense = type == 0;
             final color = isExpense ? Colors.red.shade700 : Colors.green.shade700;
             final sign = isExpense ? '-' : '+';
             final currencyFormat = NumberFormat.currency(
-                locale: 'vi_VN', symbol: '₫');
+                locale: 'vi_VN', symbol: '\u20ab');
 
             return ListTile(
               leading: Icon(isExpense ?
               Icons.arrow_downward : Icons.arrow_upward, color: color),
-              title: Text(categoryName ?? 'Không rõ',
+              title: Text(categoryName,
                   style: TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(note.isEmpty ?
               DateFormat('dd/MM/yyyy').format(date) : '$note - '
@@ -170,11 +174,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               // Xóa giao dịch khi nhấn giữ
               onLongPress: () async {
-                await dbHelper.deleteTransaction(transactionMap[columnTransactionId]);
-                _refreshData(); // Cập nhật lại UI sau khi xóa
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã xóa giao dịch')),
-                );
+                final idRaw = transactionMap[columnTransactionId];
+                final int? id = (idRaw is int) ? idRaw : ((idRaw is num) ? idRaw.toInt() : null);
+                if (id != null) {
+                  await dbHelper.deleteTransaction(id);
+                  _refreshData(); // Cập nhật lại UI sau khi xóa
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã xóa giao dịch')),
+                  );
+                }
               },
             );
           },
