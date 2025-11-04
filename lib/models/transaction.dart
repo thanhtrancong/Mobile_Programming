@@ -45,7 +45,9 @@ class Transaction {
         amount = (map[columnAmount] is num) ? (map[columnAmount] as num).toDouble() : double.tryParse(map[columnAmount]?.toString() ?? '') ?? 0.0,
         categoryId = (map[columnCategoryIdFk] is int) ? (map[columnCategoryIdFk] as int) : ((map[columnCategoryIdFk] is num) ? (map[columnCategoryIdFk] as num).toInt() : 0),
         type = (map[columnType] is int) ? (map[columnType] as int) : ((map[columnType] is num) ? (map[columnType] as num).toInt() : 0),
-        date = map[columnDate] is String ? DateTime.parse(map[columnDate] as String) : DateTime.now(), // fallback to now if parsing fails
+        date = (map[columnDate] is String)
+            ? (DateTime.tryParse(map[columnDate] as String) ?? DateTime.now())
+            : DateTime.now(), // fallback to now if parsing fails
         note = (map[columnNote] as String?) ?? '';
 
 }

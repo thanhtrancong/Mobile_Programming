@@ -154,6 +154,23 @@ class DatabaseHelper {
     }
   }
 
+  // UPDATE Transaction
+  Future<int> updateTransaction(Transaction transaction) async {
+    try {
+      if (transaction.id == null) return -1;
+      Database db = await database;
+      return await db.update(
+        tableTransaction,
+        transaction.toMap(),
+        where: '$columnTransactionId = ?',
+        whereArgs: [transaction.id],
+      );
+    } catch (e) {
+      // print('updateTransaction error: $e');
+      return -1;
+    }
+  }
+
   // REPORT: Tính tổng thu/chi trong tháng hiện tại
   Future<double> calculateTotal(int type) async {
     try {

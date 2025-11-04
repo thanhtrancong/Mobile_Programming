@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
   sqflite: ^2.3.0        # Thư viện SQLite cho Flutter
   path_provider: ^2.1.1  # Gißúp xác định đường dẫn lưu trữ Database
+  path: ^1.8.3
   intl: ^0.20.2          # Dùng để định dạng tiền tệ và ngày tháng
 
   # The following adds the Cupertino Icons font to your application.

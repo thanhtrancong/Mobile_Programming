@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../db/database_helper.dart';
 import '../models/transaction.dart';
+import 'add_transaction_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,37 +32,36 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _transactionsFuture = dbHelper.getTransactionsWithCategory();
       _totalExpenseFuture = dbHelper.calculateTotal(0); // 0 là Chi tiêu
-      _totalIncomeFuture = dbHelper.calculateTotal(1);  // 1 là Thu nhập
+      _totalIncomeFuture = dbHelper.calculateTotal(1); // 1 là Thu nhập
     });
   }
 
   // Mở màn hình thêm giao dịch (Sinh viên tự triển khai màn hình này)
   void _openAddTransactionScreen() async {
-    // Navigator.push(context, MaterialPageRoute(builder: (c) => AddTransactionScreen()));
-    // Sau khi thêm thành công, gọi _refreshData()
-    // bool? added = await Navigator.push(...)
-    // if(added == true) _refreshData();
+    final result = await Navigator.push(context, MaterialPageRoute(builder: (c) => AddTransactionScreen()));
+    if (result == true) _refreshData();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Use LayoutBuilder to adapt UI based on available width
     return Scaffold(
       appBar: AppBar(title: const Text('MyMoney - Quản lý Chi tiêu')),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // --- 1. Hiển thị Báo cáo Tổng quan ---
-            _buildSummaryCard(),
-
-            // --- 2. Hiển thị Danh sách Giao dịch ---
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Giao dịch Gần nhất', style: TextStyle(fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Center content and constrain max width for very wide screens
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 900),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                child: constraints.maxWidth >= 700
+                    ? _buildWideLayout(constraints)
+                    : _buildNarrowLayout(),
+              ),
             ),
-            _buildTransactionList(),
-          ],
-        ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddTransactionScreen,
@@ -70,12 +70,62 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildWideLayout(BoxConstraints constraints) {
+    // Two-column layout: left summary, right list
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Flexible(
+          flex: 1,
+          child: Column(
+            children: [
+              _buildSummaryCard(isCompact: false),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Flexible(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8.0),
+                child: Text('Giao dịch Gần nhất', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
+              _buildTransactionList(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNarrowLayout() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildSummaryCard(isCompact: true),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('Giao dịch Gần nhất', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          _buildTransactionList(),
+        ],
+      ),
+    );
+  }
+
   // Widget hiển thị tổng quan thu/chi/số dư
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard({bool isCompact = true}) {
+    final padding = isCompact ? 16.0 : 20.0;
+    final titleSize = isCompact ? 16.0 : 18.0;
+    final amountSize = isCompact ? 24.0 : 28.0;
+
     return Card(
-      margin: const EdgeInsets.all(16.0),
+      margin: EdgeInsets.all(padding),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(padding),
         child: FutureBuilder<List<double>>(
           // Chờ cả 2 Future (Thu và Chi) hoàn thành
           future: Future.wait([_totalIncomeFuture, _totalExpenseFuture]),
@@ -91,17 +141,16 @@ class _HomeScreenState extends State<HomeScreen> {
             final expense = snapshot.data![1]; // Tổng Chi
             final balance = income - expense; // Số dư
 
-            final currencyFormat = NumberFormat.currency(
-                locale: 'vi_VN', symbol: '\u20ab');
+            final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '\u20ab');
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Số dư hiện tại:', style: TextStyle(fontSize: 16)),
+                Text('Số dư hiện tại:', style: TextStyle(fontSize: titleSize)),
                 Text(
                   currencyFormat.format(balance),
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: amountSize,
                     fontWeight: FontWeight.bold,
                     color: balance >= 0 ? Colors.green : Colors.red,
                   ),
@@ -110,10 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Tổng Thu tháng: ${currencyFormat.format(income)}',
-                        style: TextStyle(color: Colors.green)),
-                    Text('Tổng Chi tháng: ${currencyFormat.format(expense)}',
-                        style: TextStyle(color: Colors.red)),
+                    Flexible(child: Text('Tổng Thu tháng: ${currencyFormat.format(income)}', style: TextStyle(color: Colors.green))),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text('Tổng Chi tháng: ${currencyFormat.format(expense)}', style: TextStyle(color: Colors.red))),
                   ],
                 ),
               ],
@@ -178,10 +226,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 final int? id = (idRaw is int) ? idRaw : ((idRaw is num) ? idRaw.toInt() : null);
                 if (id != null) {
                   await dbHelper.deleteTransaction(id);
+                  if (!mounted) return;
                   _refreshData(); // Cập nhật lại UI sau khi xóa
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đã xóa giao dịch')),
-                  );
+                  // Show snackbar after frame to avoid using context across async gap
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Đã xóa giao dịch')),
+                    );
+                  });
                 }
               },
             );
