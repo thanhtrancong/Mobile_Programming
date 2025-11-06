@@ -1,6 +1,8 @@
 package com.richard.mysqlite_lab07;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,6 +15,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -53,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
     private long lastClickTime = 0;
     private static final long DOUBLE_CLICK_TIME_DELTA = 300; // milliseconds
 
+    private ActivityResultLauncher<Intent> addEditLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +79,17 @@ public class MainActivity extends AppCompatActivity {
 
         // Create ViewModel
         viewModel = new ViewModelProvider(this).get(StudentViewModel.class);
+
+        // Register ActivityResult launcher
+        addEditLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // Success - LiveData observer will update UI
+                        Toast.makeText(MainActivity.this, "Thao tác thành công", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
 
         // Observe students LiveData
         viewModel.getStudents().observe(this, students -> {
@@ -244,67 +261,10 @@ public class MainActivity extends AppCompatActivity {
      * Show dialog to add a new student
      */
     private void showAddStudentDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Thêm Sinh Viên Mới / Add New Student");
-
-        // Create input fields with Vietnamese language support
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
-
-        // EditText for Last Name with Vietnamese input support
-        final EditText etHo = new EditText(this);
-        etHo.setHint("Họ (Last Name)");
-        etHo.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        // Enable Vietnamese IME (Input Method Editor)
-        etHo.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        layout.addView(etHo);
-
-        // EditText for First Name with Vietnamese input support
-        final EditText etTen = new EditText(this);
-        etTen.setHint("Tên (First Name)");
-        etTen.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        etTen.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        layout.addView(etTen);
-
-        // EditText for Class with Vietnamese input support
-        final EditText etLop = new EditText(this);
-        etLop.setHint("Lớp (Class)");
-        etLop.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
-        etLop.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        layout.addView(etLop);
-
-        builder.setView(layout);
-
-        // Add button with Vietnamese text
-        builder.setPositiveButton("Thêm / Add", (dialog, which) -> {
-            String ho = etHo.getText().toString().trim();
-            String ten = etTen.getText().toString().trim();
-            String lop = etLop.getText().toString().trim();
-
-            // Validate input
-            if (ho.isEmpty() || ten.isEmpty() || lop.isEmpty()) {
-                Toast.makeText(this, "Vui lòng điền đầy đủ thông tin! / All fields are required!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Add student to database
-            Sinhvien newStudent = new Sinhvien(ho, ten, lop);
-            viewModel.addStudent(newStudent, null);
-
-            // Reload the list
-            loadStudentData();
-
-            Toast.makeText(this, "Đã thêm sinh viên thành công! / Student added successfully!", Toast.LENGTH_SHORT).show();
-        });
-
-        // Cancel button with Vietnamese text
-        builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
-
-        builder.show();
+        // Start AddEditStudentActivity in add mode instead of dialog
+        Intent i = new Intent(this, AddEditStudentActivity.class);
+        i.putExtra(AddEditStudentActivity.EXTRA_MODE, "add");
+        addEditLauncher.launch(i);
     }
 
     /**
@@ -313,74 +273,14 @@ public class MainActivity extends AppCompatActivity {
      * @param position The position in the list
      */
     private void showEditStudentDialog(Sinhvien student, int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Sửa Thông Tin Sinh Viên / Edit Student");
-
-        // Create input fields with current values and Vietnamese input support
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
-
-        // EditText for Last Name with Vietnamese input support
-        final EditText etHo = new EditText(this);
-        etHo.setHint("Họ (Last Name)");
-        etHo.setText(student.getHo());
-        etHo.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        // Enable Vietnamese IME (Input Method Editor)
-        etHo.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        layout.addView(etHo);
-
-        // EditText for First Name with Vietnamese input support
-        final EditText etTen = new EditText(this);
-        etTen.setHint("Tên (First Name)");
-        etTen.setText(student.getTen());
-        etTen.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
-        etTen.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        layout.addView(etTen);
-
-        // EditText for Class with Vietnamese input support
-        final EditText etLop = new EditText(this);
-        etLop.setHint("Lớp (Class)");
-        etLop.setText(student.getLop());
-        etLop.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
-        etLop.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        layout.addView(etLop);
-
-        builder.setView(layout);
-
-        // Update button with Vietnamese text
-        builder.setPositiveButton("Cập Nhật / Update", (dialog, which) -> {
-            String ho = etHo.getText().toString().trim();
-            String ten = etTen.getText().toString().trim();
-            String lop = etLop.getText().toString().trim();
-
-            // Validate input
-            if (ho.isEmpty() || ten.isEmpty() || lop.isEmpty()) {
-                Toast.makeText(this, "Vui lòng điền đầy đủ thông tin! / All fields are required!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Update student object
-            student.setHo(ho);
-            student.setTen(ten);
-            student.setLop(lop);
-
-            // Update in database
-            viewModel.updateStudent(student, null);
-
-            // Reload the list
-            loadStudentData();
-
-            Toast.makeText(this, "Đã cập nhật thành công! / Student updated successfully!", Toast.LENGTH_SHORT).show();
-        });
-
-        // Cancel button with Vietnamese text
-        builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
-
-        builder.show();
+        // Start AddEditStudentActivity in edit mode with extras
+        Intent i = new Intent(this, AddEditStudentActivity.class);
+        i.putExtra(AddEditStudentActivity.EXTRA_MODE, "edit");
+        i.putExtra(AddEditStudentActivity.EXTRA_ID, student.getId());
+        i.putExtra(AddEditStudentActivity.EXTRA_HO, student.getHo());
+        i.putExtra(AddEditStudentActivity.EXTRA_TEN, student.getTen());
+        i.putExtra(AddEditStudentActivity.EXTRA_LOP, student.getLop());
+        addEditLauncher.launch(i);
     }
 
     /**
