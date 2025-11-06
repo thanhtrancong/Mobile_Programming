@@ -1,29 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
     android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/etHo"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutHo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Họ" />
+        android:hint="Họ"
+        app:boxStrokeWidth="1dp">
 
-    <EditText
-        android:id="@+id/etTen"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etHo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutTen"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Tên"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        app:boxStrokeWidth="1dp">
 
-    <EditText
-        android:id="@+id/etLop"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etTen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/layoutLop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Lớp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        app:boxStrokeWidth="1dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etLop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -36,7 +61,8 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:text="Lưu" />
+            android:text="Lưu"
+            android:enabled="false" />
 
         <Button
             android:id="@+id/btnCancel"
@@ -49,4 +75,3 @@
     </LinearLayout>
 
 </LinearLayout>
-
