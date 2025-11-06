@@ -11,22 +11,18 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-// Old import for TextView (kept for reference)
-// import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    // Old TextView declaration (kept for reference)
-    // TextView stdlist;
-
     // UI Components
     // New ListView to display the list of students
     ListView lvStudentList;
@@ -46,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
     // ArrayList to store actual Student objects for easy access
     ArrayList<Sinhvien> studentObjectList;
 
-    // Database manager instance
-    Quanlysinhvien db;
+    // ViewModel
+    private StudentViewModel viewModel;
 
     // Variable to track the last clicked position for double-click detection
     private int lastClickedPosition = -1;
@@ -72,18 +68,35 @@ public class MainActivity extends AppCompatActivity {
         // Initialize all UI components
         initializeViews();
 
-        // Create and initialize the database manager class
-        db = new Quanlysinhvien(this);
+        // Create ViewModel
+        viewModel = new ViewModelProvider(this).get(StudentViewModel.class);
 
-        // Insert sample students into the database (only on first run)
-        // Comment this out after first run to avoid duplicates
-        db.addSinhvien(new Sinhvien("Nguyen", "An", "C21CNTT"));
-        db.addSinhvien(new Sinhvien("Le", "Binh", "C21CNTT"));
-        db.addSinhvien(new Sinhvien("Tran", "Cuong", "C21CNTT"));
-        db.addSinhvien(new Sinhvien("Pham", "Dung", "C21CNTT"));
+        // Observe students LiveData
+        viewModel.getStudents().observe(this, students -> {
+            // Update UI when data changes
+            studentDataList.clear();
+            studentObjectList.clear();
+            if (students != null) {
+                for (Sinhvien s : students) {
+                    studentDataList.add(s.toString());
+                    studentObjectList.add(s);
+                }
+            }
+            adapter = new ArrayAdapter<>(
+                    MainActivity.this,
+                    android.R.layout.simple_list_item_1,
+                    studentDataList
+            );
+            lvStudentList.setAdapter(adapter);
 
-        // Load student data from database
-        loadStudentData();
+            tvInfo.setText("Tổng số: " + (students == null ? 0 : students.size()) + " sinh viên | Nhấn để chọn • Giữ lâu để xóa • Nhấn đúp để sửa");
+        });
+
+        // Insert sample students into the database via ViewModel (first run only)
+        viewModel.addStudent(new Sinhvien("Nguyen", "An", "C21CNTT"), null);
+        viewModel.addStudent(new Sinhvien("Le", "Binh", "C21CNTT"), null);
+        viewModel.addStudent(new Sinhvien("Tran", "Cuong", "C21CNTT"), null);
+        viewModel.addStudent(new Sinhvien("Pham", "Dung", "C21CNTT"), null);
 
         // Set up button click listeners
         setupButtonListeners();
@@ -96,9 +109,6 @@ public class MainActivity extends AppCompatActivity {
      * Initialize all view components from the layout
      */
     private void initializeViews() {
-        // Old code for TextView (kept for reference)
-        // stdlist = findViewById(R.id.tvstudentlist);
-
         // Initialize the ListView from the layout
         lvStudentList = findViewById(R.id.lvStudentList);
 
@@ -119,43 +129,9 @@ public class MainActivity extends AppCompatActivity {
      * Load student data from database and display in ListView
      */
     private void loadStudentData() {
-        // Clear existing data
-        studentDataList.clear();
-        studentObjectList.clear();
-
-        // Fetch all students from the database
-        List<Sinhvien> students = db.getAllSv();
-
-        // Old code using StringBuilder to concatenate strings (kept for reference)
-        /*
-        StringBuilder sb = new StringBuilder();
-        for (Sinhvien s : students) {
-            sb.append(s.toString()).append("\n");
-        }
-        stdlist.setText(sb.toString());
-        */
-
-        // New code: Convert each student object to string and add to ArrayList
-        for (Sinhvien s : students) {
-            // Add formatted student information to the display list
-            studentDataList.add(s.toString());
-            // Keep reference to the actual student object
-            studentObjectList.add(s);
-        }
-
-        // Create an ArrayAdapter to bind the ArrayList to the ListView
-        // Uses simple_list_item_1 which is a built-in Android layout for list items
-        adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_list_item_1,
-                studentDataList
-        );
-
-        // Set the adapter to the ListView to display the data
-        lvStudentList.setAdapter(adapter);
-
-        // Update info text with student count in Vietnamese
-        tvInfo.setText("Tổng số: " + students.size() + " sinh viên | Nhấn để chọn • Giữ lâu để xóa • Nhấn đúp để sửa");
+        // No longer directly load; trigger repository to refresh by accessing LiveData
+        // The LiveData observer will update UI. We can force a refresh by re-requesting LiveData.
+        viewModel.getStudents();
     }
 
     /**
@@ -170,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Refresh button - Reload data from database
+        // Refresh button - reload data
         btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -204,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Check if this is a double click (same position, within time threshold)
                 if (position == lastClickedPosition &&
-                    (clickTime - lastClickTime) < DOUBLE_CLICK_TIME_DELTA) {
+                        (clickTime - lastClickTime) < DOUBLE_CLICK_TIME_DELTA) {
                     // Double click detected - Edit student
                     onDoubleClick(position);
                     // Reset to prevent triple click
@@ -238,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         if (position < studentObjectList.size()) {
             Sinhvien student = studentObjectList.get(position);
             String info = "Đã chọn: " + student.getHo() + " " + student.getTen() +
-                         " (ID: " + student.getId() + ", Lớp: " + student.getLop() + ")";
+                    " (ID: " + student.getId() + ", Lớp: " + student.getLop() + ")";
             tvInfo.setText(info);
             Toast.makeText(this, "Đã chọn sinh viên. Nhấn đúp để sửa.", Toast.LENGTH_SHORT).show();
         }
@@ -271,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
         final EditText etHo = new EditText(this);
         etHo.setHint("Họ (Last Name)");
         etHo.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                         android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         // Enable Vietnamese IME (Input Method Editor)
         etHo.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etHo);
@@ -280,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
         final EditText etTen = new EditText(this);
         etTen.setHint("Tên (First Name)");
         etTen.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                          android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         etTen.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etTen);
 
@@ -288,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
         final EditText etLop = new EditText(this);
         etLop.setHint("Lớp (Class)");
         etLop.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                          android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
         etLop.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etLop);
 
@@ -308,7 +284,7 @@ public class MainActivity extends AppCompatActivity {
 
             // Add student to database
             Sinhvien newStudent = new Sinhvien(ho, ten, lop);
-            db.addSinhvien(newStudent);
+            viewModel.addStudent(newStudent, null);
 
             // Reload the list
             loadStudentData();
@@ -341,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
         etHo.setHint("Họ (Last Name)");
         etHo.setText(student.getHo());
         etHo.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                         android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         // Enable Vietnamese IME (Input Method Editor)
         etHo.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etHo);
@@ -351,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
         etTen.setHint("Tên (First Name)");
         etTen.setText(student.getTen());
         etTen.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                          android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         etTen.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etTen);
 
@@ -360,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
         etLop.setHint("Lớp (Class)");
         etLop.setText(student.getLop());
         etLop.setInputType(android.text.InputType.TYPE_CLASS_TEXT |
-                          android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
         etLop.setImeOptions(android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         layout.addView(etLop);
 
@@ -384,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
             student.setLop(lop);
 
             // Update in database
-            db.updateSinhvien(student);
+            viewModel.updateStudent(student, null);
 
             // Reload the list
             loadStudentData();
@@ -409,16 +385,10 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Xóa Sinh Viên / Delete Student");
             builder.setMessage("Bạn có chắc muốn xóa sinh viên " +
-                             student.getHo() + " " + student.getTen() + " không?\n\nAre you sure you want to delete this student?");
+                    student.getHo() + " " + student.getTen() + " không?\n\nAre you sure you want to delete this student?");
 
             builder.setPositiveButton("Xóa / Delete", (dialog, which) -> {
-                // Delete from database
-                db.deleteSinhvien(student.getId());
-
-                // Reload the list
-                loadStudentData();
-
-                Toast.makeText(this, "Đã xóa sinh viên! / Student deleted!", Toast.LENGTH_SHORT).show();
+                viewModel.deleteStudent(student.getId(), null);
             });
 
             builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
@@ -436,15 +406,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setMessage("Bạn có chắc muốn xóa TẤT CẢ sinh viên không? Hành động này không thể hoàn tác!\n\nAre you sure you want to delete ALL students? This action cannot be undone!");
 
         builder.setPositiveButton("Xóa Tất Cả / Delete All", (dialog, which) -> {
-            // Delete all students from database
-            for (Sinhvien student : studentObjectList) {
-                db.deleteSinhvien(student.getId());
-            }
-
-            // Reload the list
-            loadStudentData();
-
-            Toast.makeText(this, "Đã xóa tất cả sinh viên! / All students deleted!", Toast.LENGTH_SHORT).show();
+            viewModel.deleteAll(() -> runOnUiThread(() -> Toast.makeText(MainActivity.this, "Đã xóa tất cả sinh viên! / All students deleted!", Toast.LENGTH_SHORT).show()));
         });
 
         builder.setNegativeButton("Hủy / Cancel", (dialog, which) -> dialog.cancel());
@@ -455,9 +417,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Close the database connection when activity is destroyed
-        if (db != null) {
-            db.close();
-        }
+        // No direct DB close in Activity anymore; repository will be closed in ViewModel.onCleared
     }
 }
