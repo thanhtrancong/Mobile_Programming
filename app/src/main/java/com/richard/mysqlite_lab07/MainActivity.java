@@ -45,6 +45,9 @@ public class MainActivity extends AppCompatActivity {
     // ViewModel
     private StudentViewModel viewModel;
 
+    // Flag to ensure sample data is inserted only once when DB is empty
+    private boolean sampleInserted = false;
+
     // Variable to track the last clicked position for double-click detection
     private int lastClickedPosition = -1;
     private long lastClickTime = 0;
@@ -73,6 +76,17 @@ public class MainActivity extends AppCompatActivity {
 
         // Observe students LiveData
         viewModel.getStudents().observe(this, students -> {
+            // If DB is empty, insert sample students once
+            if ((students == null || students.isEmpty()) && !sampleInserted) {
+                sampleInserted = true;
+                viewModel.addStudent(new Sinhvien("Nguyen", "An", "C21CNTT"), null);
+                viewModel.addStudent(new Sinhvien("Le", "Binh", "C21CNTT"), null);
+                viewModel.addStudent(new Sinhvien("Tran", "Cuong", "C21CNTT"), null);
+                viewModel.addStudent(new Sinhvien("Pham", "Dung", "C21CNTT"), null);
+                // Return early; observer will be invoked again after inserts
+                return;
+            }
+
             // Update UI when data changes
             studentDataList.clear();
             studentObjectList.clear();
@@ -92,11 +106,6 @@ public class MainActivity extends AppCompatActivity {
             tvInfo.setText("Tổng số: " + (students == null ? 0 : students.size()) + " sinh viên | Nhấn để chọn • Giữ lâu để xóa • Nhấn đúp để sửa");
         });
 
-        // Insert sample students into the database via ViewModel (first run only)
-        viewModel.addStudent(new Sinhvien("Nguyen", "An", "C21CNTT"), null);
-        viewModel.addStudent(new Sinhvien("Le", "Binh", "C21CNTT"), null);
-        viewModel.addStudent(new Sinhvien("Tran", "Cuong", "C21CNTT"), null);
-        viewModel.addStudent(new Sinhvien("Pham", "Dung", "C21CNTT"), null);
 
         // Set up button click listeners
         setupButtonListeners();
