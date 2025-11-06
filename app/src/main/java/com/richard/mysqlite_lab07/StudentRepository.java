@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 public class StudentRepository {
     private final Quanlysinhvien dbHelper;
@@ -24,15 +25,27 @@ public class StudentRepository {
         return studentsLive;
     }
 
+    private void submitSafe(Runnable task) {
+        try {
+            executor.execute(task);
+        } catch (RejectedExecutionException e) {
+            // Executor is shutting down; run task synchronously to ensure onComplete runs.
+            try {
+                task.run();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     private void loadStudentsAsync() {
-        executor.execute(() -> {
+        submitSafe(() -> {
             List<Sinhvien> list = dbHelper.getAllSv();
             studentsLive.postValue(list);
         });
     }
 
     public void addStudent(Sinhvien sv, Runnable onComplete) {
-        executor.execute(() -> {
+        submitSafe(() -> {
             dbHelper.addSinhvien(sv);
             loadStudentsAsync();
             if (onComplete != null) onComplete.run();
@@ -40,7 +53,7 @@ public class StudentRepository {
     }
 
     public void updateStudent(Sinhvien sv, Runnable onComplete) {
-        executor.execute(() -> {
+        submitSafe(() -> {
             dbHelper.updateSinhvien(sv);
             loadStudentsAsync();
             if (onComplete != null) onComplete.run();
@@ -48,7 +61,7 @@ public class StudentRepository {
     }
 
     public void deleteStudent(int id, Runnable onComplete) {
-        executor.execute(() -> {
+        submitSafe(() -> {
             dbHelper.deleteSinhvien(id);
             loadStudentsAsync();
             if (onComplete != null) onComplete.run();
@@ -56,7 +69,7 @@ public class StudentRepository {
     }
 
     public void deleteAll(Runnable onComplete) {
-        executor.execute(() -> {
+        submitSafe(() -> {
             List<Sinhvien> all = dbHelper.getAllSv();
             for (Sinhvien s : all) {
                 dbHelper.deleteSinhvien(s.getId());
@@ -67,8 +80,24 @@ public class StudentRepository {
     }
 
     public void close() {
-        dbHelper.close();
-        executor.shutdownNow();
+        // First stop accepting new tasks and wait for running tasks to finish
+        executor.shutdown();
+        try {
+            // Wait up to 5 seconds for tasks to finish
+            if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                // If still not finished, attempt to cancel running tasks
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        // Now safe to close DB helper
+        try {
+            dbHelper.close();
+        } catch (Exception ignored) {
+            // ignore close errors
+        }
     }
 }
-

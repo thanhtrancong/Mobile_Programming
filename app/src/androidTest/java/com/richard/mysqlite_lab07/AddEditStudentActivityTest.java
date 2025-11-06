@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static org.hamcrest.Matchers.not;
 
 @RunWith(AndroidJUnit4.class)
 public class AddEditStudentActivityTest {
@@ -21,13 +22,14 @@ public class AddEditStudentActivityTest {
             // Initially Save button disabled
             Espresso.onView(ViewMatchers.withId(R.id.btnSave)).check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)));
             Espresso.onView(ViewMatchers.withId(R.id.btnSave)).check(ViewAssertions.matches(ViewMatchers.withText("Lưu")));
+            Espresso.onView(ViewMatchers.withId(R.id.btnSave)).check(ViewAssertions.matches(not(ViewMatchers.isEnabled())));
 
             // Enter only Ho
             Espresso.onView(ViewMatchers.withId(R.id.etHo)).perform(ViewActions.typeText("A"));
             Espresso.closeSoftKeyboard();
 
             // Save still disabled
-            Espresso.onView(ViewMatchers.withId(R.id.btnSave)).check(ViewAssertions.matches(ViewMatchers.isEnabled()));
+            Espresso.onView(ViewMatchers.withId(R.id.btnSave)).check(ViewAssertions.matches(not(ViewMatchers.isEnabled())));
 
             // Fill remaining
             Espresso.onView(ViewMatchers.withId(R.id.etTen)).perform(ViewActions.typeText("B"));
@@ -40,4 +42,3 @@ public class AddEditStudentActivityTest {
         }
     }
 }
-
